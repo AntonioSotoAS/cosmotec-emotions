@@ -8,7 +8,7 @@ A comprehensive real-time facial recognition and emotion analysis system designe
 - **Real-time Facial Recognition**: Identifies known astronauts using face_recognition library
 - **Emotion Analysis**: DeepFace-powered emotional state detection (happy, sad, angry, fear, surprise, disgust, neutral)
 - **Eye State Monitoring**: MediaPipe-based eye aspect ratio (EAR) calculation for drowsiness detection
-- **Sentiment Tracking**: Minute-by-minute sentiment analysis with statistical reporting
+- **Sentiment Tracking**: 10-second interval sentiment analysis with statistical reporting
 - **API Integration**: RESTful API data transmission for backend monitoring systems
 
 ### 📊 Monitoring States
@@ -138,7 +138,7 @@ EMOTION_CONFIDENCE_LOW = 0.3 # Minimum emotion confidence
 - **Main State**: Current emotional/health state (OPTIMAL/STRESSED/CRITICAL)
 - **Recognition Info**: Astronaut name and confidence level
 - **Technical Data**: EAR value, emotion confidence, FPS
-- **Sentiment Analysis**: Real-time counters and minute-by-minute analysis
+- **Sentiment Analysis**: Real-time counters and 10-second interval analysis
 
 ### API Data Structure
 ```json

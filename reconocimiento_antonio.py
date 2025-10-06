@@ -246,7 +246,7 @@ def calculate_facial_indicators(ear, eye_state, emotional_state, emo_conf, conse
     }
 
 def send_astronaut_monitoring_data(astronaut_data):
-    """Envía datos completos de monitoreo de astronautas cada minuto"""
+    """Envía datos completos de monitoreo de astronautas cada 10 segundos"""
     try:
         # Estructura de datos completa para el backend NestJS
         data = {
@@ -296,23 +296,51 @@ def send_astronaut_monitoring_data(astronaut_data):
         }
         
         # Enviar datos a la API
+        print(f"🔄 ENVIANDO DATOS A LA BASE DE DATOS...")
+        print(f"   - Astronauta: {data['astronautName']}")
+        print(f"   - ID Original: {data['astronautId']}")
+        print(f"   - Sentimiento: {data['dominantSentiment']}")
+        print(f"   - Estado: {data['overallState']}")
+        print(f"   - URL: {API_URL}")
+        print(f"   - El backend mapeará '{data['astronautId']}' al ID completo")
+        
         response = requests.post(API_URL, headers=API_HEADERS, json=data, timeout=5)
         
         if response.status_code in [200, 201]:
-            print(f"✅ Monitoring data saved successfully for {data['astronautName']}")
+            print(f"✅ ¡GUARDADO EXITOSO EN LA BASE DE DATOS!")
+            print(f"   - Astronauta: {data['astronautName']}")
+            print(f"   - ID Enviado: {data['astronautId']}")
+            print(f"   - ID Mapeado por Backend: (verificar en logs del servidor)")
+            print(f"   - Sentimiento Dominante: {data['dominantSentiment']}")
+            print(f"   - Porcentaje: {data['sentimentPercentage']:.1f}%")
+            print(f"   - Conteos: {data['sentimentCounts']}")
+            print(f"   - Estado General: {data['overallState']}")
+            print(f"   - Nivel de Alerta: {data['alertLevel']}")
+            print(f"   - Timestamp: {data['timestamp']}")
+            print(f"   - Status Code: {response.status_code}")
             return True
         else:
-            print(f"❌ API Error: {response.status_code} - {response.text}")
+            print(f"❌ ¡ERROR AL GUARDAR EN LA BASE DE DATOS!")
+            print(f"   - Status Code: {response.status_code}")
+            print(f"   - Error: {response.text}")
+            print(f"   - URL: {API_URL}")
             return False
             
     except requests.exceptions.ConnectionError:
-        print(f"❌ Could not connect to API at {API_URL}")
+        print(f"❌ ¡NO SE PUDO CONECTAR A LA BASE DE DATOS!")
+        print(f"   - URL: { }")
+        print(f"   - Verifica que el servidor esté ejecutándose")
+        print(f"   - Verifica que el puerto 5000 esté disponible")
         return False
     except requests.exceptions.Timeout:
-        print(f"❌ Timeout sending data to API")
+        print(f"❌ ¡TIMEOUT AL GUARDAR EN LA BASE DE DATOS!")
+        print(f"   - El servidor tardó más de 5 segundos en responder")
+        print(f"   - URL: {API_URL}")
         return False
     except Exception as e:
-        print(f"❌ Error sending data to API: {e}")
+        print(f"❌ ¡ERROR INESPERADO AL GUARDAR!")
+        print(f"   - Error: {e}")
+        print(f"   - URL: {API_URL}")
         return False
 
 def main():
@@ -379,7 +407,7 @@ def main():
     stable_state_frames = 0
     last_stable_state = "neutral"
     
-    # Variables para análisis de sentimientos por minuto
+    # Variables para análisis de sentimientos cada 10 segundos
     sentiment_tracker = {
         "OPTIMO": 0,
         "ESTRESADO": 0, 
@@ -397,6 +425,29 @@ def main():
     print("  'a' - Toggle API sending")
     print("  'l' - Toggle landmarks")
     print("  'r' - Reset sentiment analysis")
+    print("")
+    print("📊 LOGS ACTIVADOS:")
+    print("  - Cada 20 segundos: Análisis completo de sentimientos")
+    print("  - Cada 1 segundo: Estado actual del frame")
+    print("  - Al guardar: ¡MENSAJES CLAROS DE ÉXITO/ERROR!")
+    print("  - Presiona 's' para activar/desactivar análisis")
+    print("  - Presiona 'a' para activar/desactivar envío a API")
+    print("")
+    print("🔍 MENSAJES QUE VERÁS:")
+    print("  ✅ ¡GUARDADO EXITOSO EN LA BASE DE DATOS!")
+    print("  ❌ ¡ERROR AL GUARDAR EN LA BASE DE DATOS!")
+    print("  🔄 ENVIANDO DATOS A LA BASE DE DATOS...")
+    print("  💥 ¡FALLO AL GUARDAR EN LA BD!")
+    print("")
+    print("🗺️ MAPEO DE IDs (SOLUCIONADO):")
+    print("  Python Envía    →  Backend Mapea")
+    print("  'antonio'       →  'montejo_soto_arturo_antonio'")
+    print("  'bautista'      →  'bautista_machuca_luis_carlos'")
+    print("  'castro'        →  'castro_garcia_jose_heiner'")
+    print("  'gamonal'       →  'gamonal_chauca_jose_roger'")
+    print("  'lopez'         →  'lopez_campoverde_miguel_angel'")
+    print("  'miranda'       →  'miranda_saldana_rodolfo_junior'")
+    print("")
 
     # Variables para manejo de errores de cámara
     camera_error_count = 0
@@ -527,12 +578,12 @@ def main():
 
         frame_idx += 1
 
-        # ---------- Análisis de Sentimientos por Minuto ----------
+        # ---------- Análisis de Sentimientos cada 10 segundos ----------
         current_time = time.time()
-        elapsed_minutes = (current_time - minute_start_time) / 60.0
+        elapsed_seconds = (current_time - minute_start_time)
         
-        # Cada minuto, calcular promedio y resetear
-        if elapsed_minutes >= 1.0 and sentiment_analysis_active:
+        # Cada 20 segundos, calcular promedio y resetear
+        if elapsed_seconds >= 20.0 and sentiment_analysis_active:
             # Calcular el sentimiento dominante del minuto
             total_states = sum(sentiment_tracker.values())
             if total_states > 0:
@@ -544,7 +595,12 @@ def main():
                 # Añadir nombre de la persona si está detectada
                 if person_detected and last_recognized_name != "Unknown":
                     current_minute_sentiment = f"{last_recognized_name} - {dominant_sentiment} ({dominant_count}/{total_states} - {percentage:.1f}%)"
-                    print(f"📊 Sentiment of {last_recognized_name}: {dominant_sentiment} ({dominant_count}/{total_states} - {percentage:.1f}%)")
+                    print(f"📊 Sentiment of {last_recognized_name} (10s): {dominant_sentiment} ({dominant_count}/{total_states} - {percentage:.1f}%)")
+                    print(f"🔍 DETAILED SENTIMENT BREAKDOWN:")
+                    print(f"   - OPTIMO: {sentiment_tracker['OPTIMO']} frames")
+                    print(f"   - ESTRESADO: {sentiment_tracker['ESTRESADO']} frames") 
+                    print(f"   - CRITICO: {sentiment_tracker['CRITICO']} frames")
+                    print(f"   - WINNER: {dominant_sentiment} with {percentage:.1f}%")
                     
                     # Enviar datos completos de monitoreo a la API si está activado
                     if api_sending_active:
@@ -596,17 +652,26 @@ def main():
                             **facial_indicators
                         }
                         
-                        send_astronaut_monitoring_data(astronaut_data)
+                        # Intentar guardar en la base de datos
+                        success = send_astronaut_monitoring_data(astronaut_data)
+                        if success:
+                            print(f"🎉 ¡DATOS GUARDADOS CORRECTAMENTE EN LA BD!")
+                            print(f"   📊 Mapeo: '{last_recognized_name}' → ID completo en BD")
+                            print(f"   🔍 Verifica en Postman con el ID mapeado")
+                        else:
+                            print(f"💥 ¡FALLO AL GUARDAR EN LA BD!")
+                            print(f"   ⚠️ Revisa que el servidor NestJS esté ejecutándose")
                     else:
                         print(f"📤 API sending disabled - Data: {last_recognized_name} - {dominant_sentiment}")
+                        print(f"⚠️ Los datos NO se están guardando en la base de datos")
                 else:
                     current_minute_sentiment = f"{dominant_sentiment} ({dominant_count}/{total_states} - {percentage:.1f}%)"
-                    print(f"📊 Minute sentiment: {current_minute_sentiment}")
+                    print(f"📊 10-second sentiment: {current_minute_sentiment}")
             else:
                 current_minute_sentiment = "No data"
                 print("📊 No recognized persons to analyze")
             
-            # Resetear para el siguiente minuto
+            # Resetear para los siguientes 10 segundos
             sentiment_tracker = {"OPTIMO": 0, "ESTRESADO": 0, "CRITICO": 0}
             minute_start_time = current_time
 
@@ -723,9 +788,13 @@ def main():
         if sentiment_analysis_active and person_detected and last_recognized_name != "Unknown":
             try:
                 sentiment_tracker[estado_general] += 1
+                # Log cada frame para debugging
+                if frame_idx % 30 == 0:  # Cada 30 frames (1 segundo aprox)
+                    print(f"🎯 FRAME {frame_idx}: {last_recognized_name} → {estado_general} (Total: {sentiment_tracker})")
             except KeyError:
                 # Si el estado no está en el tracker, añadirlo
                 sentiment_tracker[estado_general] = 1
+                print(f"🆕 NEW STATE ADDED: {estado_general}")
             except Exception as e:
                 print(f"⚠️ Error in sentiment tracker: {e}")
 
@@ -819,13 +888,13 @@ def main():
         api_status_color = (0, 255, 0) if api_sending_active else (128, 128, 128)
         cv2.putText(frame, f"API: {api_status}", (right_x, 285), cv2.FONT_HERSHEY_SIMPLEX, 0.5, api_status_color, 1)
         
-        # ---------- Análisis de Sentimientos por Minuto ----------
+        # ---------- Análisis de Sentimientos cada 10 segundos ----------
         # Panel de sentimientos
         sentiment_y = 260
         cv2.rectangle(frame, (right_x-10, sentiment_y-10), (w-10, sentiment_y+80), (0, 0, 0), -1)
         cv2.addWeighted(frame, 0.8, frame, 0.2, 0, frame)
         
-        cv2.putText(frame, "=== SENTIMENTS ===", (right_x, sentiment_y+15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+        cv2.putText(frame, "=== SENTIMENTS (10s) ===", (right_x, sentiment_y+15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
         
         # Mostrar sentimiento con nombre si está disponible
         if person_detected and last_recognized_name != "Unknown":
